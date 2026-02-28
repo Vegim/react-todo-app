@@ -9,6 +9,8 @@
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
+    "@energetic-ai/classifiers": "^0.2.0",
+    "@energetic-ai/model-embeddings-en": "^0.2.0",
     "@react-router/node": "7.12.0",
     "@react-router/serve": "7.12.0",
     "isbot": "^5.1.31",
