@@ -1,79 +1,16 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
 import type { Todo } from "~/types/todo";
 import { CATEGORIES, type Category } from "~/utils/categorize";
+import rawExamples from "~/data/classifier-examples.json";
 
 // Minimum confidence to trust the predicted label; below this → "General"
 const CONFIDENCE_THRESHOLD = 0.35;
 
 const STORAGE_KEY = "todo-category-map";
 
-// Diverse training examples — semantic, not keyword-based.
-// The model (Universal Sentence Encoder) understands meaning, so examples
-// don't need to share exact words with real todos.
-const EXAMPLES: [string, Category][] = [
-  // Shopping
-  ["buy groceries for the week", "Shopping"],
-  ["order a new laptop online", "Shopping"],
-  ["pick up milk, eggs, and bread", "Shopping"],
-  ["find a good deal on winter jackets", "Shopping"],
-  ["add items to cart and checkout", "Shopping"],
-  ["restock the pantry staples", "Shopping"],
-
-  // Work
-  ["prepare slides for the client presentation", "Work"],
-  ["send the project proposal to my manager", "Work"],
-  ["review open pull requests before the sprint ends", "Work"],
-  ["schedule a standup with the engineering team", "Work"],
-  ["write the quarterly performance report", "Work"],
-  ["follow up on the invoice with accounting", "Work"],
-
-  // Home
-  ["deep clean the bathroom and kitchen", "Home"],
-  ["fix the leaking faucet under the sink", "Home"],
-  ["do the laundry and fold the clothes", "Home"],
-  ["organize clutter in the garage", "Home"],
-  ["vacuum the rugs and mop the floors", "Home"],
-  ["replace the broken light bulb in the hallway", "Home"],
-
-  // Health
-  ["hit the gym for a leg day workout", "Health"],
-  ["book a dentist check-up appointment", "Health"],
-  ["take morning vitamins after breakfast", "Health"],
-  ["go for a 5km run in the park", "Health"],
-  ["meditate for 20 minutes before bed", "Health"],
-  ["pick up the blood pressure prescription", "Health"],
-
-  // Study
-  ["read chapter 5 of the physics textbook", "Study"],
-  ["finish the programming assignment due Friday", "Study"],
-  ["study for the calculus midterm exam", "Study"],
-  ["complete the online React course module", "Study"],
-  ["practice Spanish vocabulary for an hour", "Study"],
-  ["watch the recorded lecture on machine learning", "Study"],
-
-  // Finance
-  ["pay the electricity and internet bills", "Finance"],
-  ["transfer money to the emergency savings fund", "Finance"],
-  ["cancel the unused streaming subscription", "Finance"],
-  ["file the annual tax return before the deadline", "Finance"],
-  ["review last month's bank statement", "Finance"],
-  ["set up automatic rent payment", "Finance"],
-
-  // Personal
-  ["call mom on her birthday", "Personal"],
-  ["buy an anniversary gift for my partner", "Personal"],
-  ["plan a dinner party for close friends", "Personal"],
-  ["visit grandparents this weekend", "Personal"],
-  ["write a thank-you card for the neighbor", "Personal"],
-  ["pick a restaurant for the family reunion", "Personal"],
-
-  // General
-  ["take care of this later", "General"],
-  ["figure out what to do with this", "General"],
-  ["handle the remaining miscellaneous items", "General"],
-  ["get this sorted out at some point", "General"],
-  ["check on the status of this thing", "General"],
-];
+const EXAMPLES: [string, Category][] = (
+  rawExamples as { text: string; category: string }[]
+).map(({ text, category }) => [text, category as Category]);
 
 export type CategoryMap = Record<string, Category>;
 
@@ -94,7 +31,7 @@ export function useClassifier(todos: Todo[]) {
   const [categoryMap, setCategoryMap] = useState<CategoryMap>({});
   const pendingIds = useRef<Set<string>>(new Set());
   const [classifierReady, setClassifierReady] = useState(false);
-  console.log(classifierReady)
+
   // Load stored categories synchronously before the browser paints (mirrors
   // the same useLayoutEffect pattern used in useTodos). Both effects fire in
   // the same pre-paint batch so todos + categoryMap are ready together,

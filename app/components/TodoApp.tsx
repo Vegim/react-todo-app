@@ -18,7 +18,7 @@ export function TodoApp() {
   const [filter, setFilter] = useState<Filter>("all");
   const [activeCategory, setActiveCategory] = useState<Category | "all">("all");
   const fileInputRef = useRef<HTMLInputElement>(null);
-  console.log(categoryMap,'categoryMap')
+
   // Count total + completed per category using AI-assigned categories
   const categoryBreakdown = useMemo(() => {
     const result: Partial<Record<Category, { total: number; completed: number }>> = {};
@@ -206,7 +206,6 @@ export function TodoApp() {
                   const stats = categoryBreakdown[cat] ?? { total: 0, completed: 0 };
                   const catPct = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
                   const isActive = activeCategory === cat;
-                  console.log(isActive,'isa')
                   return (
                     <button
                       key={cat}
