@@ -2,7 +2,9 @@ import { useMemo } from "react";
 import type { Todo } from "~/types/todo";
 import { TodoItem } from "./TodoItem";
 import { TodoEmptyState } from "./TodoEmptyState";
-import type { CategoryMap } from "~/hooks/useClassifier";
+import type { Category } from "~/utils/categorize";
+
+export type CategoryMap = Record<string, Category>;
 
 export type Filter = "all" | "active" | "done";
 

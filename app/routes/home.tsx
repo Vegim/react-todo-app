@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import type { Route } from "./+types/home";
-import { useAuth, DEMO_CREDENTIALS } from "~/hooks/useAuth";
+import { useAuth } from "~/hooks/useAuth";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -11,9 +11,10 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Login() {
-  const { user, hydrated, login } = useAuth();
+  const { user, hydrated, login, register } = useAuth();
   const navigate = useNavigate();
 
+  const [mode, setMode] = useState<"login" | "register">("login");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -25,22 +26,29 @@ export default function Login() {
     }
   }, [hydrated, user, navigate]);
 
-  function handleSubmit(e: { preventDefault(): void }) {
+  async function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault();
     setError("");
     setLoading(true);
-
-    // Small delay for a natural feel
-    setTimeout(() => {
-      const ok = login(username, password);
-      if (ok) {
-        navigate("/todos");
+    try {
+      if (mode === "login") {
+        await login(username.trim(), password);
       } else {
-        setError("Incorrect username or password.");
-        setLoading(false);
+        await register(username.trim(), password);
       }
-    }, 350);
+      navigate("/todos");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setLoading(false);
+    }
   }
+
+  function switchMode() {
+    setMode((m) => (m === "login" ? "register" : "login"));
+    setError("");
+  }
+
+  const isLogin = mode === "login";
 
   return (
     <div className="min-h-screen bg-[#F2F2F7] dark:bg-black flex flex-col items-center justify-center px-6">
@@ -62,10 +70,10 @@ export default function Login() {
         </div>
 
         <h1 className="text-[28px] font-bold text-gray-900 dark:text-white text-center mb-1 tracking-tight">
-          Welcome back
+          {isLogin ? "Welcome back" : "Create account"}
         </h1>
         <p className="text-[15px] text-gray-500 dark:text-[#636366] text-center mb-8">
-          Sign in to your account
+          {isLogin ? "Sign in to your account" : "Sign up to get started"}
         </p>
 
         {/* Form */}
@@ -83,7 +91,7 @@ export default function Login() {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder={DEMO_CREDENTIALS.username}
+                placeholder="username"
                 autoComplete="username"
                 autoCapitalize="none"
                 className="flex-1 text-[15px] bg-transparent outline-none text-gray-900 dark:text-white placeholder:text-gray-300 dark:placeholder:text-[#48484A]"
@@ -102,7 +110,7 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••"
-                autoComplete="current-password"
+                autoComplete={isLogin ? "current-password" : "new-password"}
                 className="flex-1 text-[15px] bg-transparent outline-none text-gray-900 dark:text-white placeholder:text-gray-300 dark:placeholder:text-[#48484A]"
               />
             </div>
@@ -119,21 +127,20 @@ export default function Login() {
             disabled={loading || !username.trim() || !password}
             className="w-full h-12 rounded-2xl bg-[#007AFF] disabled:bg-[#007AFF]/40 text-white text-[17px] font-semibold transition-all cursor-pointer disabled:cursor-default active:scale-[0.98]"
           >
-            {loading ? "Signing in…" : "Sign In"}
+            {loading ? (isLogin ? "Signing in…" : "Creating account…") : (isLogin ? "Sign In" : "Sign Up")}
           </button>
         </form>
 
-        {/* Demo credentials hint */}
-        <div className="mt-8 bg-white/70 dark:bg-[#1C1C1E]/70 rounded-2xl px-4 py-3.5 text-center">
-          <p className="text-[12px] text-gray-400 dark:text-[#636366] mb-1 font-medium uppercase tracking-wider">
-            Demo credentials
-          </p>
-          <p className="text-[13px] text-gray-600 dark:text-gray-400">
-            <span className="font-medium">{DEMO_CREDENTIALS.username}</span>
-            <span className="text-gray-300 dark:text-[#48484A] mx-2">/</span>
-            <span className="font-medium">{DEMO_CREDENTIALS.password}</span>
-          </p>
-        </div>
+        <p className="mt-6 text-center text-[14px] text-gray-500 dark:text-[#636366]">
+          {isLogin ? "Don't have an account?" : "Already have an account?"}
+          {" "}
+          <button
+            onClick={switchMode}
+            className="text-[#007AFF] font-medium cursor-pointer"
+          >
+            {isLogin ? "Sign up" : "Sign in"}
+          </button>
+        </p>
 
       </div>
     </div>

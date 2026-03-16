@@ -1,35 +1,39 @@
 import { useState, useEffect, useCallback } from "react";
+import * as authApi from "~/api/authApi";
+import { getToken } from "~/api/client";
 
-const AUTH_KEY = "auth-user";
-
-export const DEMO_CREDENTIALS = { username: "john", password: "secret" } as const;
+const USERNAME_KEY = "auth-user";
 
 export function useAuth() {
   const [user, setUser] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem(AUTH_KEY);
-    setUser(stored);
+    const token = getToken();
+    const stored = localStorage.getItem(USERNAME_KEY);
+    if (token && stored) {
+      setUser(stored);
+    }
     setHydrated(true);
   }, []);
 
-  const login = useCallback((username: string, password: string): boolean => {
-    if (
-      username.trim() === DEMO_CREDENTIALS.username &&
-      password === DEMO_CREDENTIALS.password
-    ) {
-      localStorage.setItem(AUTH_KEY, username.trim());
-      setUser(username.trim());
-      return true;
-    }
-    return false;
+  const login = useCallback(async (username: string, password: string): Promise<void> => {
+    const res = await authApi.login({ username, password });
+    localStorage.setItem(USERNAME_KEY, res.username);
+    setUser(res.username);
+  }, []);
+
+  const register = useCallback(async (username: string, password: string): Promise<void> => {
+    const res = await authApi.register({ username, password });
+    localStorage.setItem(USERNAME_KEY, res.username);
+    setUser(res.username);
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem(AUTH_KEY);
+    authApi.logout();
+    localStorage.removeItem(USERNAME_KEY);
     setUser(null);
   }, []);
 
-  return { user, hydrated, login, logout };
+  return { user, hydrated, login, register, logout };
 }

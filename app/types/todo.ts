@@ -4,4 +4,5 @@ export interface Todo {
   pinned: boolean;
   completed: boolean;
   createdAt: number;
+  category: string | null;
 }

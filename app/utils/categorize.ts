@@ -6,6 +6,9 @@ export type Category =
   | "Study"
   | "Finance"
   | "Personal"
+  | "Travel"
+  | "Entertainment"
+  | "Errands"
   | "General";
 
 export interface CategoryMeta {
@@ -24,6 +27,9 @@ export const CATEGORIES: Category[] = [
   "Study",
   "Finance",
   "Personal",
+  "Travel",
+  "Entertainment",
+  "Errands",
   "General",
 ];
 
@@ -76,6 +82,27 @@ export const CATEGORY_META: Record<Category, CategoryMeta> = {
     textClass: "text-pink-600 dark:text-pink-400",
     bgClass: "bg-pink-50 dark:bg-pink-900/30",
     activeBg: "#EC4899",
+  },
+  Travel: {
+    label: "Travel",
+    emoji: "✈️",
+    textClass: "text-sky-600 dark:text-sky-400",
+    bgClass: "bg-sky-50 dark:bg-sky-900/30",
+    activeBg: "#0EA5E9",
+  },
+  Entertainment: {
+    label: "Entertainment",
+    emoji: "🎬",
+    textClass: "text-indigo-600 dark:text-indigo-400",
+    bgClass: "bg-indigo-50 dark:bg-indigo-900/30",
+    activeBg: "#6366F1",
+  },
+  Errands: {
+    label: "Errands",
+    emoji: "📋",
+    textClass: "text-teal-600 dark:text-teal-400",
+    bgClass: "bg-teal-50 dark:bg-teal-900/30",
+    activeBg: "#14B8A6",
   },
   General: {
     label: "General",
