@@ -1,0 +1,45 @@
+version: "3.9"
+
+services:
+  db:
+    # Updated to PostgreSQL 18
+    image: postgres:18-alpine
+    container_name: todoapp-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: todoapp
+      POSTGRES_USER: todoapp
+      POSTGRES_PASSWORD: todoapp
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U todoapp -d todoapp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Empty string → API calls use relative URLs (/api/...) proxied by nginx
+        VITE_API_URL: ""
+    container_name: todoapp
+    restart: unless-stopped
+    ports:
+      - "3000:3000"   # React (nginx)
+      - "8080:8080"   # Spring Boot
+    environment:
+      DATABASE_URL: jdbc:postgresql://db:5432/todoapp
+      DB_USER: todoapp
+      DB_PASS: todoapp
+      JWT_SECRET: change-me-in-production-secret-key-32chars!
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

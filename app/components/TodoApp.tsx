@@ -1,6 +1,5 @@
 import { useState, useMemo, useRef } from "react";
 import { useTodos } from "~/hooks/useTodos";
-import { useClassifier } from "~/hooks/useClassifier";
 import { TodoInput } from "./TodoInput";
 import { TodoList, type Filter } from "./TodoList";
 import { CATEGORIES, CATEGORY_META, type Category } from "~/utils/categorize";
@@ -14,17 +13,25 @@ const FILTERS: { value: Filter; label: string }[] = [
 
 export function TodoApp() {
   const { todos, hydrated, addTodo, updateTodo, deleteTodo, togglePin, toggleComplete, clearCompleted, importTodos } = useTodos();
-  const { categoryMap, classifierReady, seedCategories } = useClassifier(todos);
   const [filter, setFilter] = useState<Filter>("all");
   const [activeCategory, setActiveCategory] = useState<Category | "all">("all");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Count total + completed per category using AI-assigned categories
+  // Build categoryMap directly from the backend-assigned category on each todo
+  const categoryMap = useMemo(() => {
+    const map: Record<string, Category> = {};
+    for (const todo of todos) {
+      if (todo.category) map[todo.id] = todo.category as Category;
+    }
+    return map;
+  }, [todos]);
+
+  // Count total + completed per category
   const categoryBreakdown = useMemo(() => {
     const result: Partial<Record<Category, { total: number; completed: number }>> = {};
     for (const todo of todos) {
       const cat = categoryMap[todo.id];
-      if (!cat) continue; // still being classified
+      if (!cat) continue;
       if (!result[cat]) result[cat] = { total: 0, completed: 0 };
       result[cat]!.total++;
       if (todo.completed) result[cat]!.completed++;
@@ -49,9 +56,9 @@ export function TodoApp() {
   const completedCount = todos.filter((t) => t.completed).length;
   const overallPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
-  // Export current todos as a JSON file download, with categories embedded
+  // Export current todos as a JSON file download
   function handleExport() {
-    const data = todos.map((t) => ({ ...t, category: categoryMap[t.id] }));
+    const data = todos.map((t) => ({ ...t }));
     const json = JSON.stringify(data, null, 2);
     const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -75,12 +82,6 @@ export function TodoApp() {
         const data = JSON.parse(event.target?.result as string) as (Todo & { category?: Category })[];
         if (!Array.isArray(data)) throw new Error("Not an array");
         importTodos(data);
-        // Restore embedded categories so they don't need re-classification
-        const embedded: Record<string, Category> = {};
-        for (const t of data) {
-          if (t.category) embedded[t.id] = t.category;
-        }
-        seedCategories(embedded);
         e.target.value = "";
       } catch {
         alert("Could not import: the file is not a valid todos JSON export.");
@@ -232,18 +233,6 @@ export function TodoApp() {
               </div>
             )}
 
-            {/* Skeleton chips — only when classifier is loading AND no stored categories exist yet */}
-            {!classifierReady && activeCategories.length === 0 && (
-              <div className="flex gap-2 mb-4">
-                {[72, 88, 64].map((w) => (
-                  <div
-                    key={w}
-                    className="h-8 rounded-full bg-gray-200 dark:bg-[#2C2C2E] animate-pulse"
-                    style={{ width: w }}
-                  />
-                ))}
-              </div>
-            )}
           </>
         )}
 

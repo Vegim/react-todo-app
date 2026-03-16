@@ -1,8 +1,10 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "~/hooks/useAuth";
+import { useProfile } from "~/hooks/useProfile";
 import { Navbar } from "~/components/Navbar";
 import { TodoApp } from "~/components/TodoApp";
+import { ProfileModal } from "~/components/ProfileModal";
 
 export function meta() {
   return [
@@ -13,7 +15,9 @@ export function meta() {
 
 export default function Todos() {
   const { user, hydrated, logout } = useAuth();
+  const { profile, updateProfile } = useProfile();
   const navigate = useNavigate();
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   useEffect(() => {
     if (hydrated && !user) {
@@ -26,13 +30,25 @@ export default function Todos() {
     navigate("/");
   }
 
-  // Don't render until we know auth state (avoids flash of content)
   if (!hydrated || !user) return null;
 
   return (
     <>
-      <Navbar username={user} onLogout={handleLogout} />
+      <Navbar
+        username={user}
+        profile={profile}
+        onLogout={handleLogout}
+        onEditProfile={() => setShowProfileModal(true)}
+      />
       <TodoApp />
+      {showProfileModal && (
+        <ProfileModal
+          profile={profile}
+          username={user}
+          onSave={updateProfile}
+          onClose={() => setShowProfileModal(false)}
+        />
+      )}
     </>
   );
 }
