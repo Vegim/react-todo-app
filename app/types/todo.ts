@@ -5,4 +5,5 @@ export interface Todo {
   completed: boolean;
   createdAt: number;
   category: string | null;
+  reminderAt: number | null;
 }

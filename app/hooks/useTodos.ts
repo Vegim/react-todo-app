@@ -4,7 +4,7 @@ import * as todosApi from "~/api/todosApi";
 import type { TodoResponse } from "~/api/types";
 
 function fromResponse(r: TodoResponse): Todo {
-  return { id: r.id, text: r.text, pinned: r.pinned, completed: r.completed, createdAt: r.createdAt, category: r.category ?? null };
+  return { id: r.id, text: r.text, pinned: r.pinned, completed: r.completed, createdAt: r.createdAt, category: r.category ?? null, reminderAt: r.reminderAt ?? null };
 }
 
 export function useTodos() {
@@ -17,10 +17,10 @@ export function useTodos() {
       .catch(() => setHydrated(true));
   }, []);
 
-  const addTodo = useCallback(async (text: string) => {
+  const addTodo = useCallback(async (text: string, reminderAt?: number | null) => {
     const trimmed = text.trim();
     if (!trimmed) return;
-    const todo = await todosApi.createTodo({ text: trimmed });
+    const todo = await todosApi.createTodo({ text: trimmed, reminderAt: reminderAt ?? undefined });
     setTodos((prev) => [fromResponse(todo), ...prev]);
   }, []);
 
@@ -51,11 +51,16 @@ export function useTodos() {
     setTodos((prev) => prev.filter((t) => !t.completed));
   }, []);
 
+  const setReminder = useCallback(async (id: string, reminderAt: number | null) => {
+    const todo = await todosApi.updateTodo(id, { reminderAt: reminderAt ?? 0 });
+    setTodos((prev) => prev.map((t) => (t.id === id ? fromResponse(todo) : t)));
+  }, []);
+
   const importTodos = useCallback(async (incoming: Todo[]) => {
     const requests = incoming.map((t) => ({ text: t.text }));
     const created = await todosApi.importTodos(requests);
     setTodos((prev) => [...created.map(fromResponse), ...prev]);
   }, []);
 
-  return { todos, hydrated, addTodo, updateTodo, deleteTodo, togglePin, toggleComplete, clearCompleted, importTodos };
+  return { todos, hydrated, addTodo, updateTodo, setReminder, deleteTodo, togglePin, toggleComplete, clearCompleted, importTodos };
 }

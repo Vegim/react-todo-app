@@ -14,5 +14,8 @@ public record TodoRequest(
 
         @Schema(description = "Category name", example = "Shopping", nullable = true)
         @Size(max = 50, message = "Category must not exceed 50 characters")
-        String category
+        String category,
+
+        @Schema(description = "Reminder timestamp as epoch milliseconds; null means no reminder", nullable = true)
+        Long reminderAt
 ) {}

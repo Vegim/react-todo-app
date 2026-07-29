@@ -24,7 +24,10 @@ public record TodoResponse(
         long createdAt,
 
         @Schema(description = "Category name", nullable = true)
-        String category
+        String category,
+
+        @Schema(description = "Reminder timestamp as epoch milliseconds; null means no reminder", nullable = true)
+        Long reminderAt
 ) {
     public static TodoResponse from(Todo todo) {
         return new TodoResponse(
@@ -33,7 +36,8 @@ public record TodoResponse(
                 todo.isPinned(),
                 todo.isCompleted(),
                 todo.getCreatedAt(),
-                todo.getCategory()
+                todo.getCategory(),
+                todo.getReminderAt()
         );
     }
 }

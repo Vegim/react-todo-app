@@ -25,11 +25,15 @@ export interface TodoResponse {
   /** Epoch milliseconds – matches React's Date.now() */
   createdAt: number;
   category: string | null;
+  /** Epoch milliseconds for the reminder; null means no reminder */
+  reminderAt: number | null;
 }
 
 export interface CreateTodoRequest {
   text: string;
   category?: string;
+  /** Epoch milliseconds for the reminder */
+  reminderAt?: number | null;
 }
 
 export interface UpdateTodoRequest {
@@ -37,6 +41,8 @@ export interface UpdateTodoRequest {
   pinned?: boolean;
   completed?: boolean;
   category?: string;
+  /** Epoch milliseconds for the reminder; 0 clears it */
+  reminderAt?: number | null;
 }
 
 // ── Profile ───────────────────────────────────────────────────────────────────

@@ -30,6 +30,10 @@ public class Todo {
     @Column(length = 50)
     private String category;
 
+    /** Epoch milliseconds for the reminder; null means no reminder. */
+    @Column(name = "reminder_at")
+    private Long reminderAt;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -42,6 +46,7 @@ public class Todo {
         this.completed = builder.completed;
         this.createdAt = builder.createdAt;
         this.category = builder.category;
+        this.reminderAt = builder.reminderAt;
         this.user = builder.user;
     }
 
@@ -55,6 +60,7 @@ public class Todo {
         private boolean completed = false;
         private Long createdAt;
         private String category;
+        private Long reminderAt;
         private User user;
 
         public Builder text(String text) { this.text = text; return this; }
@@ -62,6 +68,7 @@ public class Todo {
         public Builder completed(boolean completed) { this.completed = completed; return this; }
         public Builder createdAt(Long createdAt) { this.createdAt = createdAt; return this; }
         public Builder category(String category) { this.category = category; return this; }
+        public Builder reminderAt(Long reminderAt) { this.reminderAt = reminderAt; return this; }
         public Builder user(User user) { this.user = user; return this; }
         public Todo build() { return new Todo(this); }
     }
@@ -72,6 +79,7 @@ public class Todo {
     public boolean isCompleted() { return completed; }
     public Long getCreatedAt() { return createdAt; }
     public String getCategory() { return category; }
+    public Long getReminderAt() { return reminderAt; }
     public User getUser() { return user; }
 
     public void setText(String text) { this.text = text; }
@@ -79,5 +87,6 @@ public class Todo {
     public void setCompleted(boolean completed) { this.completed = completed; }
     public void setCreatedAt(Long createdAt) { this.createdAt = createdAt; }
     public void setCategory(String category) { this.category = category; }
+    public void setReminderAt(Long reminderAt) { this.reminderAt = reminderAt; }
     public void setUser(User user) { this.user = user; }
 }

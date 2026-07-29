@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef } from "react";
 import { useTodos } from "~/hooks/useTodos";
+import { useNotifications } from "~/hooks/useNotifications";
 import { TodoInput } from "./TodoInput";
 import { TodoList, type Filter } from "./TodoList";
 import { CATEGORIES, CATEGORY_META, type Category } from "~/utils/categorize";
@@ -12,10 +13,12 @@ const FILTERS: { value: Filter; label: string }[] = [
 ];
 
 export function TodoApp() {
-  const { todos, hydrated, addTodo, updateTodo, deleteTodo, togglePin, toggleComplete, clearCompleted, importTodos } = useTodos();
+  const { todos, hydrated, addTodo, updateTodo, setReminder, deleteTodo, togglePin, toggleComplete, clearCompleted, importTodos } = useTodos();
   const [filter, setFilter] = useState<Filter>("all");
   const [activeCategory, setActiveCategory] = useState<Category | "all">("all");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useNotifications(todos);
 
   // Build categoryMap directly from the backend-assigned category on each todo
   const categoryMap = useMemo(() => {
@@ -158,7 +161,7 @@ export function TodoApp() {
         </div>
 
         {/* Add input */}
-        <TodoInput onAdd={addTodo} />
+        <TodoInput onAdd={(text, reminderAt) => addTodo(text, reminderAt)} />
 
         {hydrated && hasTodos && (
           <>
@@ -246,6 +249,7 @@ export function TodoApp() {
             onDelete={deleteTodo}
             onTogglePin={togglePin}
             onToggleComplete={toggleComplete}
+            onSetReminder={setReminder}
             onClearCompleted={clearCompleted}
           />
         ) : (

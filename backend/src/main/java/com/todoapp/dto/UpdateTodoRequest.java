@@ -18,5 +18,8 @@ public record UpdateTodoRequest(
 
         @Schema(description = "Category name", example = "Work", nullable = true)
         @Size(max = 50, message = "Category must not exceed 50 characters")
-        String category
+        String category,
+
+        @Schema(description = "Reminder timestamp as epoch milliseconds; null means no change, 0 or negative clears the reminder", nullable = true)
+        Long reminderAt
 ) {}

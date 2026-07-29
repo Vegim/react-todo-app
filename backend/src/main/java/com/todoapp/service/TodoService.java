@@ -66,6 +66,7 @@ public class TodoService {
                 .pinned(false)
                 .completed(false)
                 .createdAt(System.currentTimeMillis())
+                .reminderAt(request.reminderAt())
                 .user(user)
                 .build();
 
@@ -93,6 +94,10 @@ public class TodoService {
         }
         if (request.category() != null) {
             todo.setCategory(StringUtils.hasText(request.category()) ? request.category().trim() : null);
+        }
+        if (request.reminderAt() != null) {
+            // 0 or negative means "clear reminder"
+            todo.setReminderAt(request.reminderAt() > 0 ? request.reminderAt() : null);
         }
 
         return TodoResponse.from(todoRepository.save(todo));

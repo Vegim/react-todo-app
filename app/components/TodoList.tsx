@@ -16,6 +16,7 @@ interface Props {
   onDelete: (id: string) => void;
   onTogglePin: (id: string) => void;
   onToggleComplete: (id: string) => void;
+  onSetReminder: (id: string, reminderAt: number | null) => void;
   onClearCompleted: () => void;
 }
 
@@ -33,6 +34,7 @@ export function TodoList({
   onDelete,
   onTogglePin,
   onToggleComplete,
+  onSetReminder,
   onClearCompleted,
 }: Props) {
   const { pinned, unpinned, completedCount } = useMemo(() => {
@@ -73,6 +75,7 @@ export function TodoList({
                   onDelete={onDelete}
                   onTogglePin={onTogglePin}
                   onToggleComplete={onToggleComplete}
+                  onSetReminder={onSetReminder}
                 />
               ))}
             </ul>
@@ -98,6 +101,7 @@ export function TodoList({
                   onDelete={onDelete}
                   onTogglePin={onTogglePin}
                   onToggleComplete={onToggleComplete}
+                  onSetReminder={onSetReminder}
                 />
               ))}
             </ul>

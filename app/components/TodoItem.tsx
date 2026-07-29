@@ -5,20 +5,38 @@ import { CATEGORY_META, type Category } from "~/utils/categorize";
 
 interface Props {
   todo: Todo;
-  category: Category | null; // null = classifier still loading
+  category: Category | null;
   onUpdate: (id: string, text: string) => void;
   onDelete: (id: string) => void;
   onTogglePin: (id: string) => void;
   onToggleComplete: (id: string) => void;
+  onSetReminder: (id: string, reminderAt: number | null) => void;
 }
 
-export function TodoItem({ todo, category, onUpdate, onDelete, onTogglePin, onToggleComplete }: Props) {
+function formatReminderTime(ts: number): string {
+  return new Date(ts).toLocaleString([], {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function toDatetimeLocal(ts: number): string {
+  const d = new Date(ts);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+export function TodoItem({ todo, category, onUpdate, onDelete, onTogglePin, onToggleComplete, onSetReminder }: Props) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(todo.text);
+  const [editReminder, setEditReminder] = useState(todo.reminderAt ? toDatetimeLocal(todo.reminderAt) : "");
   const [showConfirm, setShowConfirm] = useState(false);
 
   function startEdit() {
     setEditValue(todo.text);
+    setEditReminder(todo.reminderAt ? toDatetimeLocal(todo.reminderAt) : "");
     setIsEditing(true);
   }
 
@@ -26,11 +44,16 @@ export function TodoItem({ todo, category, onUpdate, onDelete, onTogglePin, onTo
     if (editValue.trim()) {
       onUpdate(todo.id, editValue);
     }
+    const newReminderAt = editReminder ? new Date(editReminder).getTime() : null;
+    if (newReminderAt !== todo.reminderAt) {
+      onSetReminder(todo.id, newReminderAt);
+    }
     setIsEditing(false);
   }
 
   function cancelEdit() {
     setEditValue(todo.text);
+    setEditReminder(todo.reminderAt ? toDatetimeLocal(todo.reminderAt) : "");
     setIsEditing(false);
   }
 
@@ -39,30 +62,59 @@ export function TodoItem({ todo, category, onUpdate, onDelete, onTogglePin, onTo
     if (e.key === "Escape") cancelEdit();
   }
 
+  const isOverdue = !!todo.reminderAt && todo.reminderAt < Date.now() && !todo.completed;
+  const minDatetime = new Date(Date.now() + 60_000).toISOString().slice(0, 16);
+
   if (isEditing) {
     return (
-      <li className="flex items-center gap-3 px-4 py-3 bg-white dark:bg-[#1C1C1E]">
-        {/* Spacer to align with the checkmark circle */}
-        <div className="w-6 h-6 shrink-0" />
-        <input
-          autoFocus
-          className="flex-1 text-[15px] bg-transparent outline-none text-gray-900 dark:text-white"
-          value={editValue}
-          onChange={(e) => setEditValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-        />
-        <button
-          onClick={cancelEdit}
-          className="text-[13px] text-gray-400 dark:text-[#636366] font-medium cursor-pointer"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={saveEdit}
-          className="text-[13px] text-[#007AFF] font-semibold cursor-pointer"
-        >
-          Save
-        </button>
+      <li className="flex flex-col gap-2 px-4 py-3 bg-white dark:bg-[#1C1C1E]">
+        <div className="flex items-center gap-3">
+          {/* Spacer to align with the checkmark circle */}
+          <div className="w-6 h-6 shrink-0" />
+          <input
+            autoFocus
+            className="flex-1 text-[15px] bg-transparent outline-none text-gray-900 dark:text-white"
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+          />
+          <button
+            onClick={cancelEdit}
+            className="text-[13px] text-gray-400 dark:text-[#636366] font-medium cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={saveEdit}
+            className="text-[13px] text-[#007AFF] font-semibold cursor-pointer"
+          >
+            Save
+          </button>
+        </div>
+
+        {/* Reminder picker in edit mode */}
+        <div className="flex items-center gap-2 pl-9">
+          <svg className="w-3.5 h-3.5 text-[#FF9500] shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+          </svg>
+          <span className="text-[12px] text-gray-400 dark:text-[#636366] shrink-0">Remind at</span>
+          <input
+            type="datetime-local"
+            value={editReminder}
+            min={minDatetime}
+            onChange={(e) => setEditReminder(e.target.value)}
+            className="flex-1 text-[12px] text-gray-900 dark:text-white bg-transparent outline-none [color-scheme:light] dark:[color-scheme:dark]"
+          />
+          {editReminder && (
+            <button
+              type="button"
+              onClick={() => setEditReminder("")}
+              className="text-[11px] text-[#FF3B30] font-medium cursor-pointer shrink-0"
+            >
+              Clear
+            </button>
+          )}
+        </div>
       </li>
     );
   }
@@ -87,7 +139,7 @@ export function TodoItem({ todo, category, onUpdate, onDelete, onTogglePin, onTo
         )}
       </button>
 
-      {/* Todo text + category badge */}
+      {/* Todo text + badges */}
       <div className="flex flex-col gap-1 flex-1 min-w-0">
         <span
           className={`text-[15px] leading-snug break-words transition-colors ${
@@ -98,13 +150,29 @@ export function TodoItem({ todo, category, onUpdate, onDelete, onTogglePin, onTo
         >
           {todo.text}
         </span>
-        {category === null ? (
-          <span className="h-4 w-16 rounded-full bg-gray-100 dark:bg-[#2C2C2E] animate-pulse inline-block" />
-        ) : (
-          <span className={`text-[11px] font-medium px-1.5 py-0.5 rounded-full w-fit ${CATEGORY_META[category].bgClass} ${CATEGORY_META[category].textClass}`}>
-            {CATEGORY_META[category].emoji} {CATEGORY_META[category].label}
-          </span>
-        )}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {category === null ? (
+            <span className="h-4 w-16 rounded-full bg-gray-100 dark:bg-[#2C2C2E] animate-pulse inline-block" />
+          ) : (
+            <span className={`text-[11px] font-medium px-1.5 py-0.5 rounded-full w-fit ${CATEGORY_META[category].bgClass} ${CATEGORY_META[category].textClass}`}>
+              {CATEGORY_META[category].emoji} {CATEGORY_META[category].label}
+            </span>
+          )}
+          {todo.reminderAt && !todo.completed && (
+            <span
+              className={`flex items-center gap-0.5 text-[11px] font-medium px-1.5 py-0.5 rounded-full ${
+                isOverdue
+                  ? "bg-[#FF3B30]/10 text-[#FF3B30]"
+                  : "bg-[#FF9500]/10 text-[#FF9500]"
+              }`}
+            >
+              <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+              </svg>
+              {isOverdue ? "Overdue · " : ""}{formatReminderTime(todo.reminderAt)}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Pin + action buttons — appear on hover */}
